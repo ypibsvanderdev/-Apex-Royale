@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apex Royale 3D - Battle Royale & Building Arena</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <div id="crosshair">
+    <div class="ch-dot"></div>
+    <div class="ch-line top"></div>
+    <div class="ch-line bottom"></div>
+    <div class="ch-line left"></div>
+    <div class="ch-line right"></div>
+    <div id="hitmarker" class="hitmarker">
+      <div class="hm-line hm1"></div>
+      <div class="hm-line hm2"></div>
+      <div class="hm-line hm3"></div>
+      <div class="hm-line hm4"></div>
+    </div>
+  </div>
+
+  <div id="sniper-scope">
+    <div class="scope-blackout top"></div>
+    <div class="scope-blackout bottom"></div>
+    <div class="scope-blackout left"></div>
+    <div class="scope-blackout right"></div>
+    <div class="scope-lens">
+      <div class="scope-cross-h"></div>
+      <div class="scope-cross-v"></div>
+      <div class="scope-ring"></div>
+      <div class="scope-center-dot"></div>
+    </div>
+  </div>
+
+  <div id="storm-overlay"></div>
+  <div id="damage-layer"></div>
+
+  <div id="top-hud">
+    <div class="hud-card storm-card">
+      <div class="storm-icon">⚡</div>
+      <div class="storm-info">
+        <span id="storm-status-label" class="hud-label">SAFE ZONE CLOSES IN</span>
+        <span id="storm-timer" class="hud-value">01:30</span>
+      </div>
+    </div>
+    
+    <div class="hud-card players-card">
+      <div class="alive-info">
+        <span class="hud-label">ALIVE</span>
+        <span id="players-alive-count" class="hud-value text-gold">11</span>
+      </div>
+      <div class="kill-info">
+        <span class="hud-label">ELIMS</span>
+        <span id="kills-count" class="hud-value text-red">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="minimap-container">
+    <canvas id="minimap-canvas" width="160" height="160"></canvas>
+    <div id="compass-heading">N 0°</div>
+  </div>
+
+  <div id="kill-feed"></div>
+
+  <div id="bottom-left-hud">
+    <div class="status-bars">
+      <div class="bar-row">
+        <div class="bar-icon shield-icon">🛡️</div>
+        <div class="progress-track">
+          <div id="shield-bar-fill" class="bar-fill shield-fill" style="width: 100%;"></div>
+          <span id="shield-text" class="bar-text">100 / 100</span>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-icon health-icon">❤️</div>
+        <div class="progress-track">
+          <div id="health-bar-fill" class="bar-fill health-fill" style="width: 100%;"></div>
+          <span id="health-text" class="bar-text">100 / 100</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="materials-row">
+      <div class="mat-badge mat-wood">
+        <span class="mat-icon">🪵</span>
+        <span id="mat-wood-val">250</span>
+      </div>
+      <div class="mat-badge mat-stone">
+        <span class="mat-icon">🪨</span>
+        <span id="mat-stone-val">100</span>
+      </div>
+      <div class="mat-badge mat-metal">
+        <span class="mat-icon">🧱</span>
+        <span id="mat-metal-val">40</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="build-bar">
+    <div class="build-slot" data-build="wall" id="build-wall">
+      <span class="key-bind">Q</span>
+      <div class="build-icon">🧱</div>
+      <span class="build-name">Wall</span>
+      <span class="build-cost">10</span>
+    </div>
+    <div class="build-slot" data-build="ramp" id="build-ramp">
+      <span class="key-bind">E</span>
+      <div class="build-icon">📐</div>
+      <span class="build-name">Ramp</span>
+      <span class="build-cost">10</span>
+    </div>
+    <div class="build-slot" data-build="floor" id="build-floor">
+      <span class="key-bind">C</span>
+      <div class="build-icon">⏹️</div>
+      <span class="build-name">Floor</span>
+      <span class="build-cost">10</span>
+    </div>
+  </div>
+
+  <div id="bottom-right-hud">
+    <div id="ammo-display">
+      <span id="current-clip" class="ammo-big">30</span>
+      <span class="ammo-slash">/</span>
+      <span id="reserve-ammo" class="ammo-small">180</span>
+    </div>
+
+    <div id="inventory-bar">
+      <div class="inv-slot rarity-common active" data-slot="1" id="slot-1">
+        <span class="slot-num">1</span>
+        <div class="inv-icon">⛏️</div>
+        <span class="inv-name">Pickaxe</span>
+      </div>
+      <div class="inv-slot rarity-gold" data-slot="2" id="slot-2">
+        <span class="slot-num">2</span>
+        <div class="inv-icon">🔫</div>
+        <span class="inv-name">Gold Scar</span>
+        <span class="inv-ammo">30</span>
+      </div>
+      <div class="inv-slot rarity-purple" data-slot="3" id="slot-3">
+        <span class="slot-num">3</span>
+        <div class="inv-icon">💥</div>
+        <span class="inv-name">Pump SG</span>
+        <span class="inv-ammo">5</span>
+      </div>
+      <div class="inv-slot rarity-blue" data-slot="4" id="slot-4">
+        <span class="slot-num">4</span>
+        <div class="inv-icon">🎯</div>
+        <span class="inv-name">Sniper</span>
+        <span class="inv-ammo">1</span>
+      </div>
+      <div class="inv-slot rarity-blue" data-slot="5" id="slot-5">
+        <span class="slot-num">5</span>
+        <div class="inv-icon">🧪</div>
+        <span class="inv-name">Mini Shield</span>
+        <span class="inv-ammo">3</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="interaction-prompt">
+    <div class="prompt-key">F</div>
+    <span id="prompt-text">Open Chest</span>
+  </div>
+
+  <div id="action-progress-container">
+    <div id="action-label">Drinking Shield...</div>
+    <div class="action-bar-track">
+      <div id="action-bar-fill"></div>
+    </div>
+  </div>
+
+  <div id="menu-overlay" class="overlay active">
+    <div class="menu-modal">
+      <div class="game-logo">
+        <span class="logo-accent">APEX</span> ROYALE 3D
+      </div>
+      <p class="tagline">3D Third-Person Battle Royale • Tactical Building & Combat</p>
+
+      <div class="controls-guide">
+        <div class="ctrl-group">
+          <h3>🎮 MOVEMENT</h3>
+          <p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> Move</p>
+          <p><kbd>Shift</kbd> Sprint • <kbd>Space</kbd> Jump</p>
+          <p><kbd>Ctrl</kbd> Crouch</p>
+        </div>
+        <div class="ctrl-group">
+          <h3>⚔️ COMBAT</h3>
+          <p><kbd>Left Click</kbd> Fire / Mine</p>
+          <p><kbd>Right Click</kbd> Aim Down Sights / Scope</p>
+          <p><kbd>R</kbd> Reload • <kbd>1</kbd>-<kbd>5</kbd> Slots</p>
+        </div>
+        <div class="ctrl-group">
+          <h3>🧱 BUILDING</h3>
+          <p><kbd>Q</kbd> Wall • <kbd>E</kbd> Ramp • <kbd>C</kbd> Floor</p>
+          <p><kbd>F</kbd> Interact / Open Chest / Drink</p>
+        </div>
+      </div>
+
+      <button id="start-btn" class="glow-btn">DROP INTO BATTLE</button>
+    </div>
+  </div>
+
+  <div id="victory-screen" class="overlay">
+    <div class="victory-modal">
+      <div class="victory-banner">
+        <div class="trophy-icon">🏆</div>
+        <h1>#1 VICTORY ROYALE</h1>
+        <p>You conquered the island!</p>
+      </div>
+      <div class="end-stats">
+        <div class="stat-box">
+          <span class="stat-label">Eliminations</span>
+          <span id="victory-kills" class="stat-val text-red">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Damage Dealt</span>
+          <span id="victory-dmg" class="stat-val text-gold">0</span>
+        </div>
+      </div>
+      <button id="play-again-victory-btn" class="glow-btn">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <div id="eliminated-screen" class="overlay">
+    <div class="eliminated-modal">
+      <div class="elim-banner">
+        <div class="skull-icon">💀</div>
+        <h1 class="text-red">YOU WERE ELIMINATED</h1>
+        <p id="elim-by-text">Eliminated in combat</p>
+      </div>
+      <div class="end-stats">
+        <div class="stat-box">
+          <span class="stat-label">Placement</span>
+          <span id="elim-placement" class="stat-val text-gold">#6</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Eliminations</span>
+          <span id="elim-kills" class="stat-val text-red">0</span>
+        </div>
+      </div>
+      <button id="play-again-elim-btn" class="glow-btn">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
